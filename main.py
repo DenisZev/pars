@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 
 d = []
 
-brand = 'audi' #input('Введите марку автомобиля на английском ')
-model = 'q5' #input('Введите модель ')
+brand = input('Введите марку автомобиля на английском ')
+model = input('Введите модель ')
 
 for j in range(1):
     # указываем url и get параметры запроса
