@@ -37,6 +37,7 @@ class drom(object):
             # print(url)
 
             for i in range(0, len(carName)):
+
                 print(a, '.',
                       carName[i].text + ' цена ' + price[i].text + 'Р.' + description[i].text + links[i].get('href'))
                 a+=1
