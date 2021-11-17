@@ -1,15 +1,32 @@
 import requests
 from bs4 import BeautifulSoup
+import sqlite3
 
 d = []
 
+try:
+    sqlite_connection = sqlite3.connect('mashinki.db')
+    cursor = sqlite_connection.cursor()
+    # sqlite_create_table_query = '''CREATE TABLE car_search(
+    #
+    #                             carName text,
+    #                             price text,
+    #                             description text,
+    #                             links text);'''
+
+    print("База данных подключена к SQLite")
+    # cursor.execute(sqlite_create_table_query)
+    sqlite_connection.commit()
+    print("Таблица SQLite создана")
+except sqlite3.Error as error:
+    print("Ошибка при подключении к sqlite", error)
 
 class drom(object):
 
     def __init__(self):
-        brand = input('Введите марку автомобиля на английском ')
-        model = input('Введите модель ')
-        lowprice = int(input('Введите примерную стоимость '))
+        brand = 'audi' #input('Введите марку автомобиля на английском ')
+        model = '' #input('Введите модель ')
+        lowprice = 1444444 #int(input('Введите примерную стоимость '))
         minprice = lowprice - 50000
         maxprice = lowprice + 50000
         a = 1
@@ -34,26 +51,13 @@ class drom(object):
             price = soup.find_all('span', {'data-ftid': 'bull_price'})
             description = soup.find_all('div', {'data-ftid': 'component_inline-bull-description'})
             links = soup.find_all('a', {'data-ftid': 'bulls-list_bull'})
-            # print(url)
-
             for i in range(0, len(carName)):
-
-                print(a, '.',
-                      carName[i].text + ' цена ' + price[i].text + 'Р.' + description[i].text + links[i].get('href'))
-                a+=1
-                d.append({
-                    'Название:': carName[i].text,
-                    'Цена': price[i].text,
-                    'Сведения': description[i].text,
-                    'Ссылка': links[i].get('href')
-                })
+                nam = carName[i].text
+                pr = price[i].text
+                des = description[i].text
+                li = links[i].get('href')
+                cursor.execute("insert into car_search values (?,?,?,?)", (nam, pr, des, li))
+                sqlite_connection.commit()
 
 
 drom()
-# compounds = 'car.txt'
-# with open(compounds, 'w') as f:
-#     for key, value in d:
-#         f.write('%s,%s\n' % (key, value))
-# <span class="css-bhd4b0 e162wx9x0"><span data-ftid="bull_price">3 320 000<!-- --> </span>₽</span>
-# <span data-ftid="bull_title">Audi Q5, 2018</span>
-# <a class="css-1psewqh ewrty961" data-ftid="bulls-list_bull" href="https://novosibirsk.drom.ru/audi/q5/43793354.html">
