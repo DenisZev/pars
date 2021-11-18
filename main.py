@@ -21,12 +21,13 @@ try:
 except sqlite3.Error as error:
     print("Ошибка при подключении к sqlite", error)
 
+
 class drom(object):
 
     def __init__(self):
-        brand = 'audi' #input('Введите марку автомобиля на английском ')
-        model = '' #input('Введите модель ')
-        lowprice = 1444444 #int(input('Введите примерную стоимость '))
+        brand = 'audi'  # input('Введите марку автомобиля на английском ')
+        model = ''  # input('Введите модель ')
+        lowprice = 1444444  # int(input('Введите примерную стоимость '))
         minprice = lowprice - 50000
         maxprice = lowprice + 50000
         a = 1
@@ -58,6 +59,7 @@ class drom(object):
                 li = links[i].get('href')
                 cursor.execute("insert into car_search values (?,?,?,?)", (nam, pr, des, li))
                 sqlite_connection.commit()
+
 
 
 drom()
