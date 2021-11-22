@@ -2,12 +2,22 @@ from tkinter import *
 from tkinter import ttk
 import sqlite3
 import requests
+import time
 from bs4 import BeautifulSoup
+
 # соединение с базой данных
-connection = sqlite3.connect('mashinki.db')
+connection = sqlite3.connect(':memory:')
 cursor = connection.cursor()
+sqlite_create_table_query = '''CREATE TABLE car_search(
+
+                                carName text,
+                                price text,
+                                description text,
+                                links text);'''
+cursor.execute(sqlite_create_table_query)
 connection.commit()
 cursor.execute("SELECT * FROM car_search")
+
 
 class drom(object):
 
@@ -47,35 +57,38 @@ class drom(object):
                 cursor.execute("insert into car_search values (?,?,?,?)", (nam, pr, des, li))
                 connection.commit()
 
+
 # удаление выделенного элемента
 # def delete():
-    # selection = languages_listbox.curselection()
-    # мы можем получить удаляемый элемент по индексу
-    # selected_language = languages_listbox.get(selection[0])
-    # languages_listbox.delete(selection[0])
+# selection = languages_listbox.curselection()
+# мы можем получить удаляемый элемент по индексу
+# selected_language = languages_listbox.get(selection[0])
+# languages_listbox.delete(selection[0])
 
 
 # добавление нового элемента
 def add():
     # new_language = l1_entry.get()
     # languages_listbox.insert(0, new_language)
+    cursor.execute("SELECT * FROM car_search")
     i = 0
     rows = cursor.fetchall()
 
     for row in rows:
-        for j in range(len(row)):
-            # e = Entry(new_language, fg='blue', width=len(row))
-            # e.grid(row=i, column=j)
-            tree.insert('', 'end', values=(row[0], row[1], row[2], row[3]))
-        i = i + 1
+        tree.insert("", 'end', values=(row[0], row[1], row[2], row[3]))
 
 
 # box_value = StringVar()
 
 
 def run():
+    sqlite_update_table_query = 'DELETE from car_search'
+    cursor.execute(sqlite_update_table_query)
+    for i in tree.get_children():
+        tree.delete(i)
     drom()
-    add()
+
+
 root = Tk()
 root.title("Поиск машин")
 
@@ -84,7 +97,7 @@ combo_1 = ttk.Combobox(root,
                            "audi",
                            "bmw",
                            "volvo",
-                           "mercedes"])
+                           "mercedes-benz"])
 
 combo_1.grid(column=0, row=1)
 combo_1.current(1)
@@ -107,26 +120,26 @@ lb_2 = Label(text='Введите модель автомобиля')
 lb_2.grid(column=0, row=2)
 lb_3 = Label(text='Выберите стоимость')
 lb_3.grid(column=1, row=0)
-add_button = Button(text="Поиск", command=add).grid(column=2, row=3, padx=6, pady=6)
+add_button = Button(text="Заполнить таблицу", command=add).grid(column=2, row=3, padx=6, pady=6)
 
 # создаем список
 # languages_listbox = Listbox()
 # languages_listbox.grid(row=4, column=0, columnspan=3, sticky=W + E, padx=10, pady=10)
-tree = ttk.Treeview(columns=('carName', 'price', 'description', 'links'))
-tree.column('#0')
-tree.column('price')
-tree.column('description')
+tree = ttk.Treeview(columns=('carName', 'price', 'description', 'links'), show='headings')
+tree.column('carName', width=120)
+tree.column('price', width=70)
+tree.column('description', width=350)
 tree.column('links')
 tree.heading('carName', text='Название')
 tree.heading('price', text='Стоимость')
 tree.heading('description', text='Описание')
 tree.heading('links', text='Ссылка')
 
-tree.grid(column=0, row=5)
+tree.grid(column=0, row=6, padx=6, pady=6)
 # добавляем в список начальные элементы
 # languages_listbox.insert(END, "Python")
 # languages_listbox.insert(END, "C#")
 
-delete_button = Button(text="Удалить", command=run).grid(row=2, column=1, padx=5, pady=5)
+delete_button = Button(text="Запрос", command=run).grid(row=2, column=1, padx=5, pady=5)
 
 root.mainloop()
