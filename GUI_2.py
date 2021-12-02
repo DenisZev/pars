@@ -1,9 +1,8 @@
-import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter.tix import *
 import sqlite3
 import requests
-import time
 from bs4 import BeautifulSoup
 import webbrowser
 
@@ -26,19 +25,24 @@ class drom(object):
     def __init__(self):
         brand = combo_1.get()  # input('Введите марку автомобиля на английском ')
         model = l1_entry.get()  # input('Введите модель ')
-        lowprice = int(combo_2.get())  # int(input('Введите примерную стоимость '))
-        minprice = lowprice - 20000
-        maxprice = lowprice + 20000
+        lowprice = combo_2.get()  # int(input('Введите примерную стоимость '))
+        try:
+            st = int(lowprice)
+            minprice = st - 20000
+            maxprice = st + 20000
+        except ValueError:
+            lowprice = ''
         a = 1
 
-        if lowprice < 50000:
-            maxprice = 100000
         if model == '':
             model = 'all'
         for j in range(1, 5):
             # a+=a
             # указываем url и get параметры запроса
-            url = f'https://auto.drom.ru/{brand}/{model}/page{j}/?minprice={minprice}&maxprice={maxprice}&?ph=1&pts=2&damaged=2&unsold=1&order=price'
+            if lowprice == '':
+                url = f'https://auto.drom.ru/{brand}/{model}/page{j}/'
+            else:
+                url = f'https://auto.drom.ru/{brand}/{model}/page{j}/?minprice={minprice}&maxprice={maxprice}&?ph=1&pts=2&damaged=2&unsold=1&order=price'
             # указываем get параметр с помощью которого определяется номер страницы
             par = {'p': j}
             # записываем ответ сервера в переменную r
@@ -60,14 +64,6 @@ class drom(object):
                 connection.commit()
 
 
-# удаление выделенного элемента
-# def delete():
-# selection = languages_listbox.curselection()
-# мы можем получить удаляемый элемент по индексу
-# selected_language = languages_listbox.get(selection[0])
-# languages_listbox.delete(selection[0])
-
-
 # добавление в таблицу
 def add():
     cursor.execute("SELECT * FROM car_search")
@@ -80,26 +76,28 @@ def add():
 
 # Поиск
 def search():
-
     sqlite_update_table_query = 'DELETE from car_search'
     cursor.execute(sqlite_update_table_query)
     for i in tree.get_children():
         tree.delete(i)
     drom()
+    add()
 
 
 def print_selection(event):
     for selection in tree.selection():
         item = tree.item(selection)
         links = item["values"][3]
-        text = "Выбор: {}, {} <{}>"
-        # print(links)
         webbrowser.open_new(links)
 
 
 root = Tk()
-root.title("Поиск машин")
-
+root.title("Парсер. Зеваев Д.В. БИ-32. СГУГиТ 2021")
+# # Меню
+# menu = root.Menu()
+#
+# menu.add_command(label="О программе")
+# menu.add_command(label="Выйти")
 combo_1 = ttk.Combobox(root,
                        values=[
                            "audi",
@@ -120,17 +118,28 @@ combo_2 = ttk.Combobox(root,
 combo_2.grid(column=0, row=5, padx=3, pady=3)
 combo_2.current(1)
 # текстовое поле и кнопка для добавления в список
-lb_1 = Label(text='Введите марку автомобиля')
+lb_1 = Label(text='Выберите марку автомобиля')
 lb_1.grid(column=0, row=0)
 l1_entry = Entry(width=23)
 l1_entry.grid(column=0, row=3, padx=2, pady=2)
 lb_2 = Label(text='Введите модель автомобиля')
 lb_2.grid(column=0, row=2)
-lb_3 = Label(text='Выберите стоимость')
+lb_3 = Label(text='Выберите\введите стоимость')
 lb_3.grid(column=0, row=4)
-add_button = Button(text="Заполнить таблицу", command=add, bg='lightblue').grid(column=0, row=7, padx=2, pady=2)
-search_button = Button(text="Запрос", command=search, bg='lightblue').grid(row=6, column=0, padx=2, pady=2)
+# add_button = Button(text="Заполнить таблицу", command=add, bg='lightblue').grid(column=0, row=7, padx=2, pady=2)
+searchButton = Button(text="Поиск", command=search, bg='lightblue').grid(row=6, column=0, padx=2, pady=2)
+
 # создаем таблицу
+# сортировка по цене (Работает не правильно так как получаемое значение не верное
+def treeview_sort_column(tv, col, reverse):
+    l = [(tv.set(k, col), k) for k in tv.get_children()]
+    l.sort(reverse=reverse)
+
+    for index, (val, k) in enumerate(l):
+        tv.move(k, '', index)
+
+    tv.heading(col, command=lambda: treeview_sort_column(tv, col, not reverse))
+
 
 tree = ttk.Treeview(columns=('carName', 'price', 'description', 'links'), show='headings')
 tree.column('carName', width=120)
@@ -139,7 +148,7 @@ tree.column('description', width=350)
 tree.column('links', width=350)
 tree.bind("<<TreeviewSelect>>", print_selection)
 tree.heading('carName', text='Название')
-tree.heading('price', text='Стоимость')
+tree.heading('price', text='Стоимость', command=lambda: treeview_sort_column(tree, 'price', False))
 tree.heading('description', text='Описание')
 tree.heading('links', text='Ссылка')
 # ysb = ttk.Scrollbar("", orient=VERTICAL, command=tree.yview())
